@@ -1,0 +1,7 @@
+replicaCount: 1
+image:
+  repository: ghcr.io/rosecape/iceberg-rest-api
+  tag: latest
+
+service:
+  port: 8181
