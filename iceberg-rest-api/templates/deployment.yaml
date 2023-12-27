@@ -1,0 +1,72 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ .Release.Name }}-iceberg-rest-api
+spec:
+  replicas: {{ .Values.replicaCount }}
+  selector:
+    matchLabels:
+      app: {{ template "fullname" . }}
+  template:
+    metadata:
+      labels:
+        app: {{ template "fullname" . }}
+    spec:
+      containers:
+        - name: iceberg-rest-api
+          image: {{ .Values.image.repository }}:{{ .Values.image.tag }}
+          ports:
+            - containerPort: {{ .Values.service.port }}
+          env:
+            - name: CATALOG_URI
+              value: {{ .Values.catalog.iceberg.uri }}
+            - name: CATALOG_WAREHOUSE
+              value: {{ .Values.catalog.iceberg.warehouse }}
+            - name: CATALOG_WAREHOUSE_NAME
+              value: {{ .Values.catalog.iceberg.warehouseName }}
+            - name: CATALOG_RAW_WAREHOUSE
+              value: {{ .Values.catalog.iceberg.rawWarehouse }}
+            - name: CATALOG_RAW_WAREHOUSE_NAME
+              value: {{ .Values.catalog.iceberg.rawWarehouseName }}
+            - name: CATALOG_CLEAN_WAREHOUSE
+              value: {{ .Values.catalog.iceberg.cleanWarehouse }}
+            - name: CATALOG_CLEAN_WAREHOUSE_NAME
+              value: {{ .Values.catalog.iceberg.cleanWarehouseName }}
+            - name: POSTGRES_USER
+              value: {{ .Values.postgres.user }}
+            - name: POSTGRES_PASSWORD
+              value: {{ .Values.postgres.password }}
+            - name: POSTGRES_DB
+              value: {{ .Values.postgres.database }}
+
+            {{- if eq .Values.catalog.storage "s3" }}
+            - name: CATALOG_IO__IMPL
+              value: org.apache.iceberg.aws.s3.S3FileIO
+            - name: CATALOG_s3_access__key__id
+              value: {{ .Values.catalog.aws.s3.access_key_id }}
+            - name: CATALOG_s3_secret__access__key
+              value: {{ .Values.catalog.aws.s3.secret_access_key }}
+            - name: CATALOG_s3_path__style__access
+              value: "true"
+            - name: AWS_REGION # not implemented at CATALOG_ yet
+              value: {{ .Values.catalog.aws.s3.region }}
+            {{ end }}
+
+            {{- if eq .Values.catalog.storage "gcs" }}
+            - name: CATALOG_IO__IMPL
+              value: org.apache.iceberg.gcp.gcs.GCSFileIO
+              value: {{ .Values.catalog.gcp.gcs.projectId }}
+            - name: CATALOG_GCS_OAUTH2_TOKEN
+              value: {{ .Values.catalog.gcp.gcs.oauth2Token }}
+            {{ end }}
+
+            {{- if eq .Values.catalog.storage "adls" }}
+            - name: CATALOG_IO__IMPL
+              value: org.apache.iceberg.azure.adlsv2.ADLSFileIO
+            - name: AZURE_TENANT_ID
+              value: {{ .Values.catalog.azure.tenantId }}
+            - name: AZURE_CLIENT_ID
+              value: {{ .Values.catalog.azure.clientId }}
+            - name: AZURE_CLIENT_SECRET
+              value: {{ .Values.catalog.azure.clientSecret }}
+            {{ end }}
