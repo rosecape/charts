@@ -13,9 +13,6 @@ spec:
       app: {{ template "fullname" . }}
   template:
     metadata:
-      {{- if .Values.annotations }}
-        annotations:
-          {{- toYaml .Values.annotations | nindent 4 }}
       labels:
         app: {{ template "fullname" . }}
     spec:
